@@ -80,4 +80,21 @@ describe('Eventos API Tests (TEO_06)', () => {
     const data = await res.json();
     assert.match(data.error, /institucional/);
   });
+
+  test('POST /api/eventos/:id/inscripciones rechaza con 409 si el cupo esta lleno (Bugfix Cupos)', async () => {
+    const res = await fetch(`${baseUrl}/api/eventos/2/inscripciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        student: {
+          name: 'Estudiante Sobrecupo',
+          email: 'sobrecupo@unmsm.edu.pe',
+          phone: '999111222',
+        },
+      }),
+    });
+    assert.equal(res.status, 409);
+    const data = await res.json();
+    assert.match(data.error, /cupos/);
+  });
 });
