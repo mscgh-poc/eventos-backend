@@ -80,4 +80,26 @@ describe('Eventos API Tests (TEO_06)', () => {
     const data = await res.json();
     assert.match(data.error, /institucional/);
   });
+
+  test('POST y GET /api/eventos/:id/resenas permite calificar y recalcular rating (Feature v2.0.0 MAJOR)', async () => {
+    const resPost = await fetch(`${baseUrl}/api/eventos/1/resenas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rating: 5,
+        comment: 'Excelente ponencia del Dr. Mendoza, muy clara la explicación de redes neuronales.',
+        author: 'Miguel Solis',
+      }),
+    });
+    assert.equal(resPost.status, 201);
+    const dataPost = await resPost.json();
+    assert.equal(dataPost.review.rating, 5);
+
+    const resGet = await fetch(`${baseUrl}/api/eventos/1`);
+    assert.equal(resGet.status, 200);
+    const dataGet = await resGet.json();
+    assert.equal(dataGet.averageRating, 5);
+    assert.equal(dataGet.reviewsCount, 1);
+    assert.ok(dataGet.reviews.length >= 1);
+  });
 });

@@ -111,4 +111,34 @@ router.delete('/:id/inscripciones', async (req, res) => {
   }
 });
 
+// ── GET /api/eventos/:id/resenas (Listar reseñas del evento - v2.0.0 MAJOR) ────
+router.get('/:id/resenas', async (req, res) => {
+  try {
+    const reviews = await storage.getReviews(req.params.id);
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── POST /api/eventos/:id/resenas (Registrar reseña y calificación - v2.0.0) ──
+router.post('/:id/resenas', async (req, res) => {
+  try {
+    const { rating, comment, author } = req.body;
+    if (!rating) {
+      return res.status(400).json({ error: 'Se requiere el campo rating (1 al 5)' });
+    }
+    const newReview = await storage.addReview(req.params.id, { rating, comment, author });
+    res.status(201).json({
+      message: 'Reseña registrada exitosamente',
+      review: newReview,
+    });
+  } catch (error) {
+    if (error.message.includes('no encontrado')) {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(400).json({ error: error.message });
+  }
+});
+
 export default router;

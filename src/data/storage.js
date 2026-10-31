@@ -89,9 +89,41 @@ class Storage {
     const event = this.events.find((e) => e.id === Number(id));
     if (!event) return null;
 
-    // Attach event reviews if any
+    // Attach event reviews and calculate aggregate metrics (MAJOR contract change)
     const eventReviews = this.reviews.filter((r) => r.eventId === Number(id));
-    return { ...event, reviews: eventReviews };
+    const averageRating =
+      eventReviews.length > 0
+        ? Number((eventReviews.reduce((acc, r) => acc + r.rating, 0) / eventReviews.length).toFixed(1))
+        : null;
+    return { ...event, reviews: eventReviews, reviewsCount: eventReviews.length, averageRating };
+  }
+
+  async addReview(eventId, review) {
+    await this.init();
+    const event = this.events.find((e) => e.id === Number(eventId));
+    if (!event) throw new Error('Evento no encontrado');
+
+    if (!review.rating || review.rating < 1 || review.rating > 5) {
+      throw new Error('La calificación debe ser un número entero entre 1 y 5');
+    }
+
+    const newReview = {
+      id: Date.now(),
+      eventId: Number(eventId),
+      author: review.author || 'Estudiante Anónimo',
+      rating: Number(review.rating),
+      comment: review.comment || '',
+      createdAt: new Date().toISOString(),
+    };
+
+    this.reviews.push(newReview);
+    await this.persist();
+    return newReview;
+  }
+
+  async getReviews(eventId) {
+    await this.init();
+    return this.reviews.filter((r) => r.eventId === Number(eventId));
   }
 
   async registerInscription(eventId, student) {
