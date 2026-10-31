@@ -18,6 +18,20 @@ router.get('/delay/:ms', async (req, res) => {
   });
 });
 
+// ── POST /api/eventos/reset (Reiniciar datos iniciales con fechas vigentes) ───
+router.post('/reset', async (req, res) => {
+  try {
+    await storage.resetData();
+    res.json({
+      message: 'Base de datos reiniciada con éxito',
+      count: storage.events.length,
+      events: storage.events.map((e) => ({ id: e.id, title: e.title, date: e.date })),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ── GET /api/eventos (Listado con filtros) ───────────────────────────────────
 router.get('/', async (req, res) => {
   try {
